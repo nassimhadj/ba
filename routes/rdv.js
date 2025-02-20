@@ -105,6 +105,31 @@ router.put('/:id', upload.array('attachments'), async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+// Add this new route to serve images by ID
+router.get('/image/:attachmentId', async (req, res) => {
+  try {
+    const rdv = await Rdv.findOne({
+      'attachments._id': req.params.attachmentId
+    });
+    
+    if (!rdv) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    const attachment = rdv.attachments.find(
+      att => att._id.toString() === req.params.attachmentId
+    );
+
+    if (!attachment) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    res.set('Content-Type', attachment.contentType);
+    res.send(Buffer.from(attachment.data, 'base64'));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Create new RDV
 router.post('/', upload.array('attachments'), async (req, res) => {
