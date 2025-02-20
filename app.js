@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const path = require('path');
 
 // Add this before your routes
 
@@ -13,7 +14,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+app.use('/api/rdv/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB
 // src/app.js

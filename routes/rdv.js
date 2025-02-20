@@ -66,7 +66,20 @@ router.put('/:id/status', async (req, res) => {
 
 router.put('/:id', upload.array('attachments'), async (req, res) => {
   try {
-    // Handle new file uploads
+    if(req.files) {
+      req.files.forEach(file => {
+        console.log('Absolute file path:', path.resolve(file.path));
+        console.log('File details:', {
+          filename: file.filename,
+          originalName: file.originalname,
+          path: file.path,
+          absolutePath: path.resolve(file.path),
+          destination: file.destination,
+          size: file.size
+        });
+        console.log('File exists?', fs.existsSync(file.path));
+      });
+    } ; 
     const newAttachments = req.files ? req.files.map(file => ({
       filename: file.filename,
       path: `/uploads/${file.filename}`,
