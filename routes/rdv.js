@@ -6,12 +6,16 @@ const path = require('path');
 const fs = require('fs');
 
 // Configure multer for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024 // limit file size to 5MB
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Save files in 'uploads' directory
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)); 
   }
 });
+const upload = multer({ storage });
+
 // Add this route with your other routes
 router.put('/:id/status', async (req, res) => {
   try {
@@ -73,11 +77,11 @@ router.put('/:id', upload.array('attachments'), async (req, res) => {
 
     // Process uploaded files from memory
     const attachments = req.files ? req.files.map(file => ({
-      filename: file.originalname,
-      data: file.buffer.toString('base64'),
-      contentType: file.mimetype,
+      filename: file.filename,  // Save only filename, not base64
+      path: `/uploads/${file.filename}`, // Path to access later
       uploadDate: new Date()
     })) : [];
+    
 
     // Find and update the RDV
     const updatedRdv = await Rdv.findByIdAndUpdate(
@@ -154,12 +158,13 @@ router.post('/', upload.array('attachments'), async (req, res) => {
     } = req.body;
 
     // Process uploaded files
+    
     const attachments = req.files ? req.files.map(file => ({
-      filename: file.originalname,
-      path: file.path,
+      filename: file.filename,  // Save only filename, not base64
+      path: `/uploads/${file.filename}`, // Path to access later
       uploadDate: new Date()
     })) : [];
-
+    
     // Create new RDV
     const rdv = new Rdv({
       title,
