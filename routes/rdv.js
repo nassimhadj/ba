@@ -4,12 +4,10 @@ const multer = require('multer');
 const Rdv = require('../models/rdv');
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // limit file size to 5MB
   }
 });
 // Add this route with your other routes
@@ -53,7 +51,7 @@ router.put('/:id/status', async (req, res) => {
   }
 });
 
-const upload = multer({ storage: storage });
+
 
 router.put('/:id', upload.array('attachments'), async (req, res) => {
   try {
@@ -71,10 +69,11 @@ router.put('/:id', upload.array('attachments'), async (req, res) => {
       etapes
     } = req.body;
 
-    // Process uploaded files
+    // Process uploaded files from memory
     const attachments = req.files ? req.files.map(file => ({
       filename: file.originalname,
-      path: file.path,
+      data: file.buffer.toString('base64'), // Store as base64 string
+      contentType: file.mimetype,
       uploadDate: new Date()
     })) : [];
 
@@ -92,7 +91,7 @@ router.put('/:id', upload.array('attachments'), async (req, res) => {
         etapes: JSON.parse(etapes || '[]'),
         ...(attachments.length > 0 && { attachments })
       },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!updatedRdv) {
