@@ -61,51 +61,30 @@ router.put('/:id/status', async (req, res) => {
 
 router.put('/:id', upload.array('attachments'), async (req, res) => {
   try {
-    console.log('Updating RDV:', req.params.id);
-    console.log('Request body:', req.body);
-
-    const {
-      title,
-      email,
-      name,
-      phone,
-      address,
-      description,
-      status,
-      etapes
-    } = req.body;
-
-    // Process uploaded files from memory
-    const attachments = req.files ? req.files.map(file => ({
-      filename: file.filename,  // Save only filename, not base64
-      path: `/uploads/${file.filename}`, // Path to access later
+    // Handle new file uploads
+    const newAttachments = req.files ? req.files.map(file => ({
+      filename: file.filename,
+      path: `/uploads/${file.filename}`,
       uploadDate: new Date()
     })) : [];
-    
 
-    // Find and update the RDV
+    // Get existing attachments from the request
+    const existingAttachments = req.body.existingAttachments ? 
+      JSON.parse(req.body.existingAttachments) : [];
+
+    // Combine both arrays
+    const allAttachments = [...existingAttachments, ...newAttachments];
+
     const updatedRdv = await Rdv.findByIdAndUpdate(
       req.params.id,
       {
-        title,
-        email,
-        name,
-        phone,
-        address,
-        description,
-        status,
-        etapes: JSON.parse(etapes || '[]'),
-        ...(attachments.length > 0 && { attachments })
+        //...other fields
+        attachments: allAttachments
       },
       { new: true }
     );
 
-    if (!updatedRdv) {
-      return res.status(404).json({ error: 'RDV not found' });
-    }
-
     res.json(updatedRdv);
-
   } catch (error) {
     console.error('Error updating RDV:', error);
     res.status(400).json({ error: error.message });
