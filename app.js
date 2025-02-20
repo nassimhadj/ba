@@ -14,7 +14,10 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/api/rdv/uploads', express.static(path.join(__dirname, 'uploads')));
+// Use the absolute path from Render
+const uploadsPath = '/opt/render/project/src/uploads';
+app.use('/api/rdv/uploads', express.static(uploadsPath));
+
 
 // Connect to MongoDB
 // src/app.js
