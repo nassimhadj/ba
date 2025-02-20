@@ -5,6 +5,11 @@ const Rdv = require('../models/rdv');
 const path = require('path');
 const fs = require('fs');
 
+const uploadDir = 'uploads';
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir);
+    console.log('Created uploads directory');
+} ;
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -123,6 +128,12 @@ router.get('/image/:attachmentId', async (req, res) => {
 // Create new RDV
 router.post('/', upload.array('attachments'), async (req, res) => {
   try {
+    if(req.files) {
+      req.files.forEach(file => {
+        console.log('Full file path:', path.resolve(file.path));
+        console.log('File exists?', fs.existsSync(file.path));
+      });
+    }
     console.log('Received request:', req.body);
     
     const {
