@@ -51,7 +51,8 @@ const rdvSchema = new mongoose.Schema({
   },
   attachments: [{
     filename: String,
-    path: String,
+    data: String, // This will store the base64 data
+    contentType: String,
     uploadDate: Date
   }],
   etapes: [etapeSchema]
