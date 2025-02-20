@@ -74,7 +74,7 @@ router.put('/:id', upload.array('attachments'), async (req, res) => {
     // Process uploaded files from memory
     const attachments = req.files ? req.files.map(file => ({
       filename: file.originalname,
-      data: file.buffer.toString('base64'), // Store as base64 string
+      data: file.buffer.toString('base64'),
       contentType: file.mimetype,
       uploadDate: new Date()
     })) : [];
@@ -111,15 +111,13 @@ router.put('/:id', upload.array('attachments'), async (req, res) => {
 // Modify this route in your backend
 router.get('/image/:attachmentId', async (req, res) => {
   try {
-    // First log what we're looking for
-    console.log('Looking for attachment with ID:', req.params.attachmentId);
+    console.log('Fetching image:', req.params.attachmentId);
     
     const rdv = await Rdv.findOne({
       'attachments._id': req.params.attachmentId
     });
     
     if (!rdv) {
-      console.log('RDV not found');
       return res.status(404).json({ error: 'Image not found' });
     }
 
@@ -127,23 +125,12 @@ router.get('/image/:attachmentId', async (req, res) => {
       att => att._id.toString() === req.params.attachmentId
     );
 
-    if (!attachment) {
-      console.log('Attachment not found');
-      return res.status(404).json({ error: 'Image not found' });
+    if (!attachment || !attachment.data) {
+      return res.status(404).json({ error: 'Image data not found' });
     }
 
-    console.log('Found attachment:', attachment);
-
-    // Try to read the file from the filesystem
-    const filePath = path.join(__dirname, '..', 'uploads', attachment.filename);
-    
-    if (!fs.existsSync(filePath)) {
-      console.log('File not found at path:', filePath);
-      return res.status(404).json({ error: 'Image file not found' });
-    }
-
-    res.sendFile(filePath);
-    
+    res.set('Content-Type', attachment.contentType || 'image/jpeg');
+    res.send(Buffer.from(attachment.data, 'base64'));
   } catch (error) {
     console.error('Error serving image:', error);
     res.status(500).json({ error: error.message });
