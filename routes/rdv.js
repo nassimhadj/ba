@@ -132,12 +132,11 @@ router.post('/', upload.array('attachments'), async (req, res) => {
       phone,
       address,
       description,
-      status ,
+      status,
       etapes
     } = req.body;
 
     // Process uploaded files
-    
     const attachments = req.files ? req.files.map(file => ({
       filename: file.filename,  // Save only filename, not base64
       path: `/uploads/${file.filename}`, // Path to access later
@@ -152,7 +151,7 @@ router.post('/', upload.array('attachments'), async (req, res) => {
       phone,
       address,
       description,
-      status  ,
+      status,
       attachments,
       etapes: JSON.parse(etapes || '[]')
     });
