@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const Rdv = require('../models/rdv');
+const path = require('path');
+const fs = require('fs');
 
 // Configure multer for file uploads
 const upload = multer({
@@ -106,13 +108,18 @@ router.put('/:id', upload.array('attachments'), async (req, res) => {
   }
 });
 // Add this new route to serve images by ID
+// Modify this route in your backend
 router.get('/image/:attachmentId', async (req, res) => {
   try {
+    // First log what we're looking for
+    console.log('Looking for attachment with ID:', req.params.attachmentId);
+    
     const rdv = await Rdv.findOne({
       'attachments._id': req.params.attachmentId
     });
     
     if (!rdv) {
+      console.log('RDV not found');
       return res.status(404).json({ error: 'Image not found' });
     }
 
@@ -121,12 +128,24 @@ router.get('/image/:attachmentId', async (req, res) => {
     );
 
     if (!attachment) {
+      console.log('Attachment not found');
       return res.status(404).json({ error: 'Image not found' });
     }
 
-    res.set('Content-Type', attachment.contentType);
-    res.send(Buffer.from(attachment.data, 'base64'));
+    console.log('Found attachment:', attachment);
+
+    // Try to read the file from the filesystem
+    const filePath = path.join(__dirname, '..', 'uploads', attachment.filename);
+    
+    if (!fs.existsSync(filePath)) {
+      console.log('File not found at path:', filePath);
+      return res.status(404).json({ error: 'Image file not found' });
+    }
+
+    res.sendFile(filePath);
+    
   } catch (error) {
+    console.error('Error serving image:', error);
     res.status(500).json({ error: error.message });
   }
 });
