@@ -66,48 +66,52 @@ router.put('/:id/status', async (req, res) => {
 
 router.put('/:id', upload.array('attachments'), async (req, res) => {
   try {
-    if(req.files) {
-      req.files.forEach(file => {
-        console.log('Absolute file path:', path.resolve(file.path));
-        console.log('File details:', {
-          filename: file.filename,
-          originalName: file.originalname,
-          path: file.path,
-          absolutePath: path.resolve(file.path),
-          destination: file.destination,
-          size: file.size
-        });
-        console.log('File exists?', fs.existsSync(file.path));
-      });
-    } ; 
+    const {
+      title,
+      email,
+      name,
+      phone,
+      address,
+      description,
+      status,
+      etapes
+    } = req.body;
+
+    const existingAttachments = req.body.existingAttachments ?
+      JSON.parse(req.body.existingAttachments) : [];
+
     const newAttachments = req.files ? req.files.map(file => ({
       filename: file.filename,
       path: `/uploads/${file.filename}`,
       uploadDate: new Date()
     })) : [];
 
-    // Get existing attachments from the request
-    const existingAttachments = req.body.existingAttachments ? 
-      JSON.parse(req.body.existingAttachments) : [];
-
-    // Combine both arrays
     const allAttachments = [...existingAttachments, ...newAttachments];
 
     const updatedRdv = await Rdv.findByIdAndUpdate(
       req.params.id,
       {
-        //...other fields
+        ...(title && { title }),
+        ...(email && { email }),
+        ...(name && { name }),
+        ...(phone && { phone }),
+        ...(address && { address }),
+        ...(description && { description }),
+        ...(status && { status }),
+        ...(etapes && { etapes: JSON.parse(etapes || "[]") }),
         attachments: allAttachments
       },
       { new: true }
     );
 
+    console.log("✅ RDV updated:", updatedRdv);
     res.json(updatedRdv);
   } catch (error) {
     console.error('Error updating RDV:', error);
     res.status(400).json({ error: error.message });
   }
 });
+
 // Add this new route to serve images by ID
 // Modify this route in your backend
 router.get('/image/:attachmentId', async (req, res) => {
